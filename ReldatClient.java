@@ -1,8 +1,22 @@
+package reldat;
+
 import java.io.*;
 import java.net.*;
+import reldat.*;
 
-public class smsclientUDP {
+public class ReldatClient {
+  public final int HEADER_SIZE = 20;
+  public final int PAYLOAD_SIZE = 1000;
+  public final int PACKET_SIZE = HEADER_SIZE + PAYLOAD_SIZE;
+
   public static void main(String[] args) throws IOException {
+    ReldatClientHelper reldatClient = new ReldatClientHelper();
+    try {
+      reldatClient.connect("localhost", 8088, 200);
+    } catch(Exception e) {
+      System.out.println(e.getMessage());
+    }
+    /*
     // does not have the correct number of arguments
     if (args.length != 3) {
       System.out.println("Usage: java smsclientUDP <server IP address> <port number> <msg.txt>");
@@ -73,7 +87,8 @@ public class smsclientUDP {
 
     if (gotResponse == false) {
       System.out.println("0 -1 Error");
-    }
+    }*/
 
   }
 }
+
