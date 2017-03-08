@@ -2,6 +2,7 @@ package reldat;
 
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.TimeUnit;
 import reldat.*;
 import static reldat.ReldatClientState.*;
 
@@ -21,37 +22,102 @@ public class ReldatClientHelper {
     clientSocket.setSoTimeout(TIMEOUT);
 
     while (true) {
-      switch (state) {
-        case CLOSED:
-          // sends syn
-          byte[] syn = new byte[HEADER_SIZE];
-          syn[HEADER_SIZE - 1] = (byte) 0b10000000;
-          DatagramPacket sendPacket = new DatagramPacket(syn, HEADER_SIZE, address, portNum);
-          clientSocket.send(sendPacket);
-          state = SYN_SENT;
-          break;
-        case SYN_SENT:
-          // waits for syn ack
-          byte[] potentialSynAck = new byte[HEADER_SIZE];
-          DatagramPacket receivePacket = new DatagramPacket(potentialSynAck, potentialSynAck.length);
 
-          // blocks until synack received
-          clientSocket.receive(receivePacket);
+      try {
+        switch (state) {
+          case CLOSED:
+            // sends syn
+            byte[] syn = new byte[HEADER_SIZE];
+            syn[HEADER_SIZE - 1] = (byte) 0b10000000;
+            DatagramPacket sendPacket = new DatagramPacket(syn, HEADER_SIZE, address, portNum);
+            clientSocket.send(sendPacket);
+            state = SYN_SENT;
+            System.out.println("CLOSED STATE");
+            break;
+          case SYN_SENT:
+            // waits for syn ack
+            byte[] potentialSynAck = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
 
-          if (potentialSynAck[HEADER_SIZE - 1] == (byte) 0b10100000) {
-            byte[] ack = new byte[HEADER_SIZE];
-            ack[HEADER_SIZE - 1] = (byte) 0b00100000;
-            DatagramPacket ackPacket = new DatagramPacket(ack, HEADER_SIZE, address, portNum);
-            clientSocket.send(ackPacket);
-            state = ESTABLISHED;
-          } else {
-            // resend syn if synack not received by timeout
-            state = CLOSED;
-          }
-          break;
-        case ESTABLISHED:
-          System.out.println("CONNECTION ESTABLISHED");
+            if (ReldatHelper.checkSynAck(potentialSynAck)) {
+              byte[] ack = new byte[HEADER_SIZE];
+              ack[HEADER_SIZE - 1] = (byte) 0b00100000;
+              DatagramPacket ackPacket = new DatagramPacket(ack, HEADER_SIZE, address, portNum);
+              clientSocket.send(ackPacket);
+              state = ESTABLISHED;
+            } else {
+              // resend syn if synack not received by timeout
+              state = CLOSED;
+            }
+            System.out.println("SYN_SENT STATE");
+            break;
+          case ESTABLISHED:
+            System.out.println("CONNECTION ESTABLISHED");
+            state = FIN;
+            disconnect(ip, portNum);
+        }
+      } catch (SocketTimeoutException e) {
+        state = CLOSED;
       }
+    }
+  }
+
+  public void disconnect(String ip, int portNum) throws Exception {
+    InetAddress address = InetAddress.getByName(ip);
+    clientSocket.setSoTimeout(TIMEOUT);
+
+    try {
+      while (true) {
+        switch (state) {
+          case FIN:
+            // send fin
+            ReldatHelper.sendFin(clientSocket, address, portNum, HEADER_SIZE);
+
+            // byte[] potentialAck2 = new byte[HEADER_SIZE];
+            // potentialAck2 = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
+
+            state = FIN_WAIT_1;
+            System.out.println("FIN");
+            break;
+          case FIN_WAIT_1:
+            // wait for ack from server
+            byte[] potentialAck = new byte[HEADER_SIZE];
+            potentialAck = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
+
+            if (ReldatHelper.checkAck(potentialAck)) {
+              state = FIN_WAIT_2;
+            } else if (ReldatHelper.checkFin(potentialAck)) {
+              System.out.println("WHYYYYYYYYYYYYY");
+            } else if (ReldatHelper.checkReset(potentialAck)) {
+              throw new SocketTimeoutException();
+            } else {
+              System.out.println("potentialAck");
+            }
+            System.out.println("FIN_WAIT_1");
+            break;
+          case FIN_WAIT_2:
+            // wait for fin from server
+            byte[] potentialFin = new byte[HEADER_SIZE];
+            potentialFin = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
+            if (ReldatHelper.checkFin(potentialFin)) {
+              ReldatHelper.sendAck(clientSocket, address, portNum, HEADER_SIZE);
+              state = TIME_WAIT;
+            } else if (ReldatHelper.checkReset(potentialFin)) {
+              throw new SocketTimeoutException();
+            }
+            System.out.println("FIN_WAIT_2");
+            break;
+          case TIME_WAIT:
+            // wait for 30 seconds and
+            System.out.println("TIME_WAIT");
+            TimeUnit.SECONDS.sleep(5);
+            clientSocket.close();
+            System.exit(0);
+        }
+      }
+    } catch (SocketTimeoutException e) {
+      state = CLOSED;
+      System.out.println("Error disconnecting. Returning back to LISTEN");
+      return;
     }
   }
 

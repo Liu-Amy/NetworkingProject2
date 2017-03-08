@@ -33,7 +33,7 @@ public class ReldatServerHelper {
           clientAddress = receivePacket.getAddress();
 
           // syn check, do nothing if syn
-          if (potentialSyn[HEADER_SIZE - 1] == (byte) 0b10000000) {
+          if (ReldatHelper.checkSyn(potentialSyn)) {
             ReldatHelper.sendSynAck(serverSocket, clientAddress, clientPort, HEADER_SIZE);
             state = SYN_RCVD;
           }
@@ -41,7 +41,10 @@ public class ReldatServerHelper {
         case SYN_RCVD:
           System.out.println("SYN RECEIVED");
           // wait for ack from client
-          if (ReldatHelper.checkAck(serverSocket, HEADER_SIZE)) {
+          byte[] potentialAck = new byte[HEADER_SIZE];
+          potentialAck = ReldatHelper.readPacket(serverSocket, HEADER_SIZE);
+
+          if (ReldatHelper.checkAck(potentialAck)) {
             // establish connection
             state = ESTABLISHED;
           } else {
@@ -54,6 +57,38 @@ public class ReldatServerHelper {
         case ESTABLISHED:
           // a bunch of code
           System.out.println("CONNECTION ESTABLISHED");
+          state = FIN;
+          disconnect(clientPort);
+      }
+    }
+  }
+
+  public void disconnect (int portNum) throws Exception {
+    while (true) {
+      switch (state) {
+        case FIN:
+        byte[] potentialFin = new byte[HEADER_SIZE];
+        potentialFin = ReldatHelper.readPacket(serverSocket, HEADER_SIZE);
+          if (ReldatHelper.checkFin(potentialFin)) {
+            ReldatHelper.sendAck(serverSocket, clientAddress, portNum, HEADER_SIZE);
+            System.out.println("ACK sent");
+            state = CLOSE_WAIT;
+          }
+          System.out.println("FIN");
+          break;
+        case CLOSE_WAIT:
+          ReldatHelper.sendFin(serverSocket, clientAddress, portNum, HEADER_SIZE);
+          state = LAST_ACK;
+          System.out.println("CLOSE_WAIT");
+          break;
+        case LAST_ACK:
+          System.out.println("LAST_ACK");
+          byte[] potentialAck = new byte[HEADER_SIZE];
+          potentialFin = ReldatHelper.readPacket(serverSocket, HEADER_SIZE);
+          if (ReldatHelper.checkAck(potentialFin)) {
+            state = LISTEN;
+            return;
+          }
       }
     }
   }
