@@ -84,8 +84,7 @@ public class ReldatClientHelper {
             potentialAck = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
 
             if (ReldatHelper.checkFinAck(potentialAck)) {
-              byte[] ack = new byte[HEADER_SIZE];
-              ack = ReldatHelper.sendAck(clientSocket, address, portNum, HEADER_SIZE);
+              ReldatHelper.sendAck(clientSocket, address, portNum, HEADER_SIZE);
               state = TIME_WAIT;
             } else if (ReldatHelper.checkReset(potentialAck)) {
               throw new SocketTimeoutException();
