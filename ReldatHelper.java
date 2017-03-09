@@ -5,9 +5,17 @@ import java.net.*;
 import reldat.*;
 
 public class ReldatHelper {
+
   public static void sendPacket(DatagramSocket socket, byte[] data, InetAddress ip, int port) throws IOException {
     DatagramPacket sendPacket = new DatagramPacket(data, data.length, ip, port);
     socket.send(sendPacket);
+  }
+
+  public static void createHeader(byte[] data, int prevSeqNum, int totalNum) {
+    int seqNum = prevSeqNum + data.length;
+  }
+
+  public static void calculateChecksum(byte[] data) {
   }
 
   public static void sendAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {

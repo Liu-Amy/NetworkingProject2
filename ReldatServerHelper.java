@@ -58,20 +58,22 @@ public class ReldatServerHelper {
         case ESTABLISHED:
           // a bunch of code
           System.out.println("CONNECTION ESTABLISHED");
-          state = FIN;
-          disconnect(clientPort);
+          // read in packet from client
+          byte[] packet = ReldatHelper.readPacket(serverSocket, HEADER_SIZE);
+          System.out.println(packet);
+          //disconnect(clientPort);
       }
     }
   }
 
   public void disconnect (int portNum) throws Exception {
+    state = FIN;
     while (true) {
       switch (state) {
         case FIN:
         byte[] potentialFin = new byte[HEADER_SIZE];
         potentialFin = ReldatHelper.readPacket(serverSocket, HEADER_SIZE);
           if (ReldatHelper.checkFin(potentialFin)) {
-            System.out.println("got FIN");
             state = CLOSE_WAIT;
           }
           System.out.println("FIN");

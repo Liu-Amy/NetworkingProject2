@@ -15,6 +15,7 @@ public class ReldatClient {
       reldatClient.connect("localhost", 8088, 200);
     } catch(Exception e) {
       System.out.println(e.getMessage());
+      System.out.println(e.getClass().getCanonicalName());
     }
     /*
     // does not have the correct number of arguments

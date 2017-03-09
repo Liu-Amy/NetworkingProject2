@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.concurrent.TimeUnit;
 import reldat.*;
 import static reldat.ReldatClientState.*;
+import java.util.Scanner;
 
 public class ReldatClientHelper {
   public final int HEADER_SIZE = 15;
@@ -39,10 +40,7 @@ public class ReldatClientHelper {
             byte[] potentialSynAck = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
 
             if (ReldatHelper.checkSynAck(potentialSynAck)) {
-              byte[] ack = new byte[HEADER_SIZE];
-              ack[HEADER_SIZE - 1] = (byte) 0b00100000;
-              DatagramPacket ackPacket = new DatagramPacket(ack, HEADER_SIZE, address, portNum);
-              clientSocket.send(ackPacket);
+              ReldatHelper.sendAck(clientSocket, address, portNum, HEADER_SIZE);
               state = ESTABLISHED;
             } else {
               // resend syn if synack not received by timeout
@@ -52,8 +50,19 @@ public class ReldatClientHelper {
             break;
           case ESTABLISHED:
             System.out.println("CONNECTION ESTABLISHED");
-            state = FIN;
+            Scanner scan = new Scanner(System.in);
+            String input = scan.nextLine();
+            if (input.equals("disconnect")) {
+              disconnect(ip, portNum);
+            } else if (input.matches("(transform).*(.txt)")) {
+              System.out.println("File taken");
+              String filePath = input.split(" ")[1];
+              ReldatFileSender.sendFile(clientSocket, filePath, address, portNum, 100);
+            } else {
+              System.out.println("Invalid input. Please try again.");
+            }
             disconnect(ip, portNum);
+            break;
         }
       } catch (SocketTimeoutException e) {
         state = CLOSED;
@@ -62,6 +71,8 @@ public class ReldatClientHelper {
   }
 
   public void disconnect(String ip, int portNum) throws Exception {
+    state = FIN;
+
     InetAddress address = InetAddress.getByName(ip);
     clientSocket.setSoTimeout(TIMEOUT);
 
