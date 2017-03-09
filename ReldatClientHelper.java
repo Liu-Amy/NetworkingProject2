@@ -8,7 +8,7 @@ import static reldat.ReldatClientState.*;
 import java.util.Scanner;
 
 public class ReldatClientHelper {
-  public final int HEADER_SIZE = 15;
+  public final int HEADER_SIZE = 13;
   public final int PAYLOAD_SIZE = 1000;
   public final int PACKET_SIZE = HEADER_SIZE + PAYLOAD_SIZE;
   public final int TIMEOUT = 10000;
@@ -82,9 +82,6 @@ public class ReldatClientHelper {
           case FIN:
             // send fin
             ReldatHelper.sendFin(clientSocket, address, portNum, HEADER_SIZE);
-
-            // byte[] potentialAck2 = new byte[HEADER_SIZE];
-            // potentialAck2 = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
 
             state = FIN_WAIT_1;
             System.out.println("FIN");

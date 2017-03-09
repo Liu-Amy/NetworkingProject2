@@ -1,8 +1,10 @@
 package reldat;
 
 import java.io.*;
+import java.nio.*;
 import java.net.*;
 import reldat.*;
+import java.security.MessageDigest;
 
 public class ReldatHelper {
 
@@ -11,11 +13,43 @@ public class ReldatHelper {
     socket.send(sendPacket);
   }
 
-  public static void createHeader(byte[] data, int prevSeqNum, int totalNum) {
-    int seqNum = prevSeqNum + data.length;
+  public static void sendPacketWithHeader(DatagramSocket socket, byte[] data, InetAddress ip, int port, int seqNum, int ackNum) throws IOException {
+    mergeByteArray(createHeader(data, seqNum, ackNum), data);
+    DatagramPacket sendPacket = new DatagramPacket(data, data.length, ip, port);
+    socket.send(sendPacket);
   }
 
-  public static void calculateChecksum(byte[] data) {
+  public static byte[] createHeader(byte[] data, int seqNum, int ackNum) {
+    ByteBuffer headerBuffer = ByteBuffer.allocate(ReldatConstants.HEADER_SIZE);
+    // checksum 2 bytes
+    headerBuffer.put(calculateChecksum(data));
+    // buffersize 2 bytes
+    int buffersize = data.length;
+    headerBuffer.putInt(2, buffersize);
+    // sequence number 4 bytes
+    headerBuffer.putInt(4, seqNum);
+    // ack number 4 bytes
+    headerBuffer.putInt(8, ackNum);
+    // SYN FIN ACK RST bit
+    byte flag;
+    if (ackNum != 0) {
+      flag = (byte) 0b00100000;
+    } else {
+      flag = (byte) 0;
+    }
+    headerBuffer.put(12, flag);
+    return headerBuffer.array();
+  }
+
+  public static byte[] calculateChecksum(byte[] data) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      md.update(data);
+      return md.digest();
+    } catch (Exception e) {
+      System.out.println("Checksum failed");
+      return new byte[2];
+    }
   }
 
   public static void sendAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
@@ -76,5 +110,12 @@ public class ReldatHelper {
 
   public static Boolean checkReset(byte[] buffer) throws IOException {
     return buffer[buffer.length - 1] == (byte) 0b00010000;
+  }
+
+  public static byte[] mergeByteArray(byte[] a, byte[] b) {
+    byte[] combined = new byte[a.length+b.length];
+    System.arraycopy(a, 0, combined, 0, a.length);
+    System.arraycopy(b, 0, combined, a.length, b.length);
+    return combined;
   }
 }

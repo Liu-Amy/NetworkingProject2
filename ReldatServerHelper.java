@@ -7,7 +7,7 @@ import reldat.*;
 import static reldat.ReldatServerState.*;
 
 public class ReldatServerHelper {
-  public final int HEADER_SIZE = 15;
+  public final int HEADER_SIZE = 13;
   public final int PAYLOAD_SIZE = 1000;
   public final int PACKET_SIZE = HEADER_SIZE + PAYLOAD_SIZE;
   public final int TIMEOUT = 10000;
