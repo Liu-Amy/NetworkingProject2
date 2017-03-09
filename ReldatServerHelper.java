@@ -52,6 +52,7 @@ public class ReldatServerHelper {
             // established so we need to send a RST packet to
             // reset connection
             ReldatHelper.sendReset(serverSocket, clientAddress, clientPort, HEADER_SIZE);
+            state = LISTEN;
           }
           break;
         case ESTABLISHED:
@@ -70,14 +71,13 @@ public class ReldatServerHelper {
         byte[] potentialFin = new byte[HEADER_SIZE];
         potentialFin = ReldatHelper.readPacket(serverSocket, HEADER_SIZE);
           if (ReldatHelper.checkFin(potentialFin)) {
-            ReldatHelper.sendAck(serverSocket, clientAddress, portNum, HEADER_SIZE);
-            System.out.println("ACK sent");
+            System.out.println("got FIN");
             state = CLOSE_WAIT;
           }
           System.out.println("FIN");
           break;
         case CLOSE_WAIT:
-          ReldatHelper.sendFin(serverSocket, clientAddress, portNum, HEADER_SIZE);
+          ReldatHelper.sendFinAck(serverSocket, clientAddress, portNum, HEADER_SIZE);
           state = LAST_ACK;
           System.out.println("CLOSE_WAIT");
           break;
