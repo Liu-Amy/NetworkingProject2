@@ -22,6 +22,11 @@ public class ReldatHelper {
     sendPacket(socket, ack, ip, port);
   }
 
+  public static void sendFinAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
+    byte[] ack = new byte[headerSize];
+    ack[headerSize - 1] = (byte) 0b01100000;
+    sendPacket(socket, ack, ip, port);
+  }
   public static void sendReset(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
     byte[] ack = new byte[headerSize];
     ack[headerSize - 1] = (byte) 0b00010000;
@@ -55,6 +60,10 @@ public class ReldatHelper {
 
   public static Boolean checkFin(byte[] buffer) throws IOException {
     return buffer[buffer.length - 1] == (byte) 0b01000000;
+  }
+
+  public static Boolean checkFinAck(byte[] buffer) throws IOException {
+    return buffer[buffer.length - 1] == (byte) 0b01100000;
   }
 
   public static Boolean checkReset(byte[] buffer) throws IOException {

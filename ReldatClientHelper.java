@@ -83,28 +83,13 @@ public class ReldatClientHelper {
             byte[] potentialAck = new byte[HEADER_SIZE];
             potentialAck = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
 
-            if (ReldatHelper.checkAck(potentialAck)) {
-              state = FIN_WAIT_2;
-            } else if (ReldatHelper.checkFin(potentialAck)) {
-              System.out.println("WHYYYYYYYYYYYYY");
-            } else if (ReldatHelper.checkReset(potentialAck)) {
-              throw new SocketTimeoutException();
-            } else {
-              System.out.println("potentialAck");
-            }
-            System.out.println("FIN_WAIT_1");
-            break;
-          case FIN_WAIT_2:
-            // wait for fin from server
-            byte[] potentialFin = new byte[HEADER_SIZE];
-            potentialFin = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
-            if (ReldatHelper.checkFin(potentialFin)) {
+            if (ReldatHelper.checkFinAck(potentialAck)) {
               ReldatHelper.sendAck(clientSocket, address, portNum, HEADER_SIZE);
               state = TIME_WAIT;
-            } else if (ReldatHelper.checkReset(potentialFin)) {
+            } else if (ReldatHelper.checkReset(potentialAck)) {
               throw new SocketTimeoutException();
             }
-            System.out.println("FIN_WAIT_2");
+            System.out.println("FIN_WAIT_1");
             break;
           case TIME_WAIT:
             // wait for 30 seconds and
