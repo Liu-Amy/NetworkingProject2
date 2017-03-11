@@ -14,8 +14,8 @@ public class ReldatHelper {
   }
 
   public static void sendPacketWithHeader(DatagramSocket socket, byte[] data, InetAddress ip, int port, int seqNum, int ackNum) throws IOException {
-    mergeByteArray(createHeader(data, seqNum, ackNum), data);
-    DatagramPacket sendPacket = new DatagramPacket(data, data.length, ip, port);
+    byte[] merged = mergeByteArray(createHeader(data, seqNum, ackNum), data);
+    DatagramPacket sendPacket = new DatagramPacket(merged, merged.length, ip, port);
     socket.send(sendPacket);
   }
 
@@ -45,6 +45,7 @@ public class ReldatHelper {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");
       md.update(data);
+      System.out.println("length: " + md.digest().length);
       return md.digest();
     } catch (Exception e) {
       System.out.println("Checksum failed");
@@ -117,5 +118,21 @@ public class ReldatHelper {
     System.arraycopy(a, 0, combined, 0, a.length);
     System.arraycopy(b, 0, combined, a.length, b.length);
     return combined;
+  }
+
+  public static char[] byteArrayToUpperCharArray (byte[] byteArray) {
+    char[] charArray = new char[byteArray.length];
+    for (int i = 0; i < byteArray.length; i++) {
+      charArray[i] = Character.toUpperCase((char) byteArray[i]);
+    }
+    return charArray;
+  }
+
+  public static byte[] charArraytoByteArray (char[] charArray) {
+    byte[] byteArray = new byte[charArray.length];
+    for (int i = 0; i < charArray.length; i++) {
+      byteArray[i] = (byte) charArray[i];
+    }
+    return byteArray;
   }
 }

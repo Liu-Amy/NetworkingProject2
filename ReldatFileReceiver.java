@@ -6,30 +6,31 @@ import java.util.*;
 
 public class ReldatFileReceiver {
 
-  public static void readPacket (byte[] packet) {
-
+  public static void handlePacket (DatagramSocket serverSocket, InetAddress clientAddress, int clientPort) {
     try {
       while (true) {
+        // get packet from client
+        byte[] packet = ReldatHelper.readPacket(serverSocket, ReldatConstants.PACKET_SIZE);
+
+        // remove header from packet received
         byte[] data = new byte[ReldatConstants.PAYLOAD_SIZE];
-        data = Arrays.copyOfRange(packet, 13, packet.length);
+        data = Arrays.copyOfRange(packet, ReldatConstants.HEADER_SIZE, packet.length);
 
-        String message = new String(data, "UTF-8");
+        // convert byte array to upper case char array
+        char[] upperCharArrayData = ReldatHelper.byteArrayToUpperCharArray(data);
 
-        message = message.toUpperCase();
+        System.out.println("UPPERCASE: " + String.valueOf(upperCharArrayData));
 
-        System.out.println("UPPERCASE: " + message);
+        // convert uppercase char array to byte array
+        byte[] upperByteArrayData = ReldatHelper.charArraytoByteArray(upperCharArrayData);
 
-        // TODO: convert byte[] data to string
-        // TODO: convert string from lowercase to uppercase
-        // TODO: convert uppercase string to byte[]
-        // TODO: break up byte[] into packets
-        // TODO: send packets to client
+        // send byte array to client
+        ReldatHelper.sendPacketWithHeader(serverSocket, upperByteArrayData, clientAddress, clientPort, 0, 1);
+
       }
     } catch(Exception e) {
       System.out.println(e.getClass().getCanonicalName());
     }
-
-
   }
 
 }

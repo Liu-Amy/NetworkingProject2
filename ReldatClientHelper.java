@@ -8,9 +8,6 @@ import static reldat.ReldatClientState.*;
 import java.util.Scanner;
 
 public class ReldatClientHelper {
-  public final int HEADER_SIZE = 13;
-  public final int PAYLOAD_SIZE = 1000;
-  public final int PACKET_SIZE = HEADER_SIZE + PAYLOAD_SIZE;
   public final int TIMEOUT = 10000;
 
   public DatagramSocket clientSocket;
@@ -28,19 +25,19 @@ public class ReldatClientHelper {
         switch (state) {
           case CLOSED:
             // sends syn
-            byte[] syn = new byte[HEADER_SIZE];
-            syn[HEADER_SIZE - 1] = (byte) 0b10000000;
-            DatagramPacket sendPacket = new DatagramPacket(syn, HEADER_SIZE, address, portNum);
+            byte[] syn = new byte[ReldatConstants.HEADER_SIZE];
+            syn[ReldatConstants.HEADER_SIZE - 1] = (byte) 0b10000000;
+            DatagramPacket sendPacket = new DatagramPacket(syn, ReldatConstants.HEADER_SIZE, address, portNum);
             clientSocket.send(sendPacket);
             state = SYN_SENT;
             System.out.println("CLOSED STATE");
             break;
           case SYN_SENT:
             // waits for syn ack
-            byte[] potentialSynAck = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
+            byte[] potentialSynAck = ReldatHelper.readPacket(clientSocket, ReldatConstants.HEADER_SIZE);
 
             if (ReldatHelper.checkSynAck(potentialSynAck)) {
-              ReldatHelper.sendAck(clientSocket, address, portNum, HEADER_SIZE);
+              ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
               state = ESTABLISHED;
             } else {
               // resend syn if synack not received by timeout
@@ -61,7 +58,6 @@ public class ReldatClientHelper {
             } else {
               System.out.println("Invalid input. Please try again.");
             }
-            disconnect(ip, portNum);
             break;
         }
       } catch (SocketTimeoutException e) {
@@ -81,18 +77,18 @@ public class ReldatClientHelper {
         switch (state) {
           case FIN:
             // send fin
-            ReldatHelper.sendFin(clientSocket, address, portNum, HEADER_SIZE);
+            ReldatHelper.sendFin(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
 
             state = FIN_WAIT_1;
             System.out.println("FIN");
             break;
           case FIN_WAIT_1:
             // wait for ack from server
-            byte[] potentialAck = new byte[HEADER_SIZE];
-            potentialAck = ReldatHelper.readPacket(clientSocket, HEADER_SIZE);
+            byte[] potentialAck = new byte[ReldatConstants.HEADER_SIZE];
+            potentialAck = ReldatHelper.readPacket(clientSocket, ReldatConstants.HEADER_SIZE);
 
             if (ReldatHelper.checkFinAck(potentialAck)) {
-              ReldatHelper.sendAck(clientSocket, address, portNum, HEADER_SIZE);
+              ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
               state = TIME_WAIT;
             } else if (ReldatHelper.checkReset(potentialAck)) {
               throw new SocketTimeoutException();
