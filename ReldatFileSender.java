@@ -10,15 +10,15 @@ public class ReldatFileSender {
   public static void sendFile(DatagramSocket socket, String filePath,
       InetAddress ip, int portNum, int windowSize) {
     try {
-      byte[] packetData = new byte[ReldatConstants.PACKET_SIZE];
+      byte[] packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
       BufferedInputStream in = new BufferedInputStream(new FileInputStream(filePath));
-      while ((in.read(packetData, 0, ReldatConstants.PACKET_SIZE)) != -1) {
+      while ((in.read(packetData, 0, ReldatConstants.PAYLOAD_SIZE)) != -1) {
         // sends packet of data
         ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, 0);
         // increment sequence number
         seqNum += packetData.length;
         // wait for ack (no selective repeat for now)
-        packetData = new byte[ReldatConstants.PACKET_SIZE];
+        packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
 
         // receive packet from server
         byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];

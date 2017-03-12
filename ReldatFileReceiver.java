@@ -12,21 +12,34 @@ public class ReldatFileReceiver {
         // get packet from client
         byte[] packet = ReldatHelper.readPacket(serverSocket, ReldatConstants.PACKET_SIZE);
 
+        // get header from packet received
+        byte[] header = Arrays.copyOfRange(packet, 0, ReldatConstants.HEADER_SIZE);
+
         // remove header from packet received
         byte[] data = new byte[ReldatConstants.PAYLOAD_SIZE];
         data = Arrays.copyOfRange(packet, ReldatConstants.HEADER_SIZE, packet.length);
 
-        // convert byte array to upper case char array
-        char[] upperCharArrayData = ReldatHelper.byteArrayToUpperCharArray(data);
+        // implement checksum
+        byte[] checksum = Arrays.copyOfRange(header, 0, 16);
+        byte[] other = ReldatHelper.calculateChecksum(data);
 
-        System.out.println("UPPERCASE: " + String.valueOf(upperCharArrayData));
+        // if checksums are equal continue, if not do nothing
+        if (Arrays.equals(ReldatHelper.calculateChecksum(data), checksum)) {
 
-        // convert uppercase char array to byte array
-        byte[] upperByteArrayData = ReldatHelper.charArraytoByteArray(upperCharArrayData);
+          // convert byte array to upper case char array
+          char[] upperCharArrayData = ReldatHelper.byteArrayToUpperCharArray(data);
 
-        // send byte array to client
-        ReldatHelper.sendPacketWithHeader(serverSocket, upperByteArrayData, clientAddress, clientPort, 0, 1);
+          System.out.println("UPPERCASE: " + String.valueOf(upperCharArrayData));
 
+          // convert uppercase char array to byte array
+          byte[] upperByteArrayData = ReldatHelper.charArraytoByteArray(upperCharArrayData);
+
+          // send byte array to client
+          ReldatHelper.sendPacketWithHeader(serverSocket, upperByteArrayData, clientAddress, clientPort, 0, 1);
+
+        } else {
+          System.out.println("Packet was corrupted");
+        }
       }
     } catch(Exception e) {
       System.out.println(e.getClass().getCanonicalName());

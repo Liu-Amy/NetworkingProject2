@@ -20,16 +20,22 @@ public class ReldatHelper {
   }
 
   public static byte[] createHeader(byte[] data, int seqNum, int ackNum) {
+    int index = 0;
     ByteBuffer headerBuffer = ByteBuffer.allocate(ReldatConstants.HEADER_SIZE);
-    // checksum 2 bytes
+
     headerBuffer.put(calculateChecksum(data));
-    // buffersize 2 bytes
     int buffersize = data.length;
-    headerBuffer.putInt(2, buffersize);
-    // sequence number 4 bytes
-    headerBuffer.putInt(4, seqNum);
-    // ack number 4 bytes
-    headerBuffer.putInt(8, ackNum);
+
+    index += ReldatConstants.CHECKSUM_SIZE;
+    headerBuffer.putInt(index, buffersize);
+
+    index += ReldatConstants.BUFFER_SIZE;
+    headerBuffer.putInt(index, seqNum);
+
+    index += ReldatConstants.SEQ_SIZE;
+    headerBuffer.putInt(index, ackNum);
+
+    index += ReldatConstants.ACK_SIZE;
     // SYN FIN ACK RST bit
     byte flag;
     if (ackNum != 0) {
@@ -37,7 +43,8 @@ public class ReldatHelper {
     } else {
       flag = (byte) 0;
     }
-    headerBuffer.put(12, flag);
+    headerBuffer.put(index, flag);
+    printByteArray(headerBuffer.array());
     return headerBuffer.array();
   }
 
@@ -45,11 +52,10 @@ public class ReldatHelper {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");
       md.update(data);
-      System.out.println("length: " + md.digest().length);
       return md.digest();
     } catch (Exception e) {
       System.out.println("Checksum failed");
-      return new byte[2];
+      return new byte[16];
     }
   }
 
@@ -134,5 +140,11 @@ public class ReldatHelper {
       byteArray[i] = (byte) charArray[i];
     }
     return byteArray;
+  }
+
+  public static void printByteArray (byte[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      System.out.print(arr[i] + " ");
+    }
   }
 }
