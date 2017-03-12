@@ -44,7 +44,6 @@ public class ReldatHelper {
       flag = (byte) 0;
     }
     headerBuffer.put(index, flag);
-    printByteArray(headerBuffer.array());
     return headerBuffer.array();
   }
 
@@ -146,5 +145,9 @@ public class ReldatHelper {
     for (int i = 0; i < arr.length; i++) {
       System.out.print(arr[i] + " ");
     }
+  }
+
+  public static int byteArrToInt(byte[] arr) {
+    return ByteBuffer.wrap(arr).getInt();
   }
 }

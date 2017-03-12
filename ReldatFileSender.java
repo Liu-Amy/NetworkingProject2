@@ -8,21 +8,27 @@ public class ReldatFileSender {
   public static int seqNum = 0;
 
   public static void sendFile(DatagramSocket socket, String filePath,
-      InetAddress ip, int portNum, int windowSize) {
+      InetAddress ip, int portNum, int windowSize) throws IOException {
     try {
+      // buffer to store packet
       byte[] packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
       BufferedInputStream in = new BufferedInputStream(new FileInputStream(filePath));
       while ((in.read(packetData, 0, ReldatConstants.PAYLOAD_SIZE)) != -1) {
         // sends packet of data
         ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, 0);
         // increment sequence number
-        seqNum += packetData.length;
+        seqNum++;
         // wait for ack (no selective repeat for now)
         packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
 
         // receive packet from server
         byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];
         potentialReply = ReldatHelper.readPacket(socket, ReldatConstants.PACKET_SIZE);
+
+        // get header of potential reply
+        byte[] replyHeader = Arrays.copyOfRange(potentialReply, 0, ReldatConstants.HEADER_SIZE);
+
+        int replyAckNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 22, 26));
 
         // remove header from packet received
         byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
@@ -36,10 +42,6 @@ public class ReldatFileSender {
       }
     } catch(FileNotFoundException e) {
       System.out.println("File not found");
-    } catch(IOException e) {
-      System.out.println("IO Exception");
-    } catch(Exception e) {
-      System.out.println(e.getClass().getCanonicalName());
     }
   }
 }

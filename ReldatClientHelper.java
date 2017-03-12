@@ -8,8 +8,6 @@ import static reldat.ReldatClientState.*;
 import java.util.Scanner;
 
 public class ReldatClientHelper {
-  public final int TIMEOUT = 10000;
-
   public DatagramSocket clientSocket;
   public ReldatClientState state = CLOSED;
 
@@ -17,7 +15,7 @@ public class ReldatClientHelper {
     clientSocket = new DatagramSocket();
 
     InetAddress address = InetAddress.getByName(ip);
-    clientSocket.setSoTimeout(TIMEOUT);
+    clientSocket.setSoTimeout(ReldatConstants.TIMEOUT);
 
     while (true) {
 
@@ -30,7 +28,7 @@ public class ReldatClientHelper {
             DatagramPacket sendPacket = new DatagramPacket(syn, ReldatConstants.HEADER_SIZE, address, portNum);
             clientSocket.send(sendPacket);
             state = SYN_SENT;
-            System.out.println("CLOSED STATE");
+            System.out.println("Sending SYN");
             break;
           case SYN_SENT:
             // waits for syn ack
@@ -44,15 +42,15 @@ public class ReldatClientHelper {
               state = CLOSED;
             }
             System.out.println("SYN_SENT STATE");
+            System.out.println("CONNECTION ESTABLISHED");
             break;
           case ESTABLISHED:
-            System.out.println("CONNECTION ESTABLISHED");
+            System.out.println("Enter input: ");
             Scanner scan = new Scanner(System.in);
             String input = scan.nextLine();
             if (input.equals("disconnect")) {
               disconnect(ip, portNum);
             } else if (input.matches("(transform).*(.txt)")) {
-              System.out.println("File taken");
               String filePath = input.split(" ")[1];
               ReldatFileSender.sendFile(clientSocket, filePath, address, portNum, 100);
             } else {
@@ -61,6 +59,7 @@ public class ReldatClientHelper {
             break;
         }
       } catch (SocketTimeoutException e) {
+        System.out.println("Timeout reached. Communication with server lost.");
         state = CLOSED;
       }
     }
@@ -70,101 +69,35 @@ public class ReldatClientHelper {
     state = FIN;
 
     InetAddress address = InetAddress.getByName(ip);
-    clientSocket.setSoTimeout(TIMEOUT);
+    while (true) {
+      switch (state) {
+        case FIN:
+          // send fin
+          ReldatHelper.sendFin(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
 
-    try {
-      while (true) {
-        switch (state) {
-          case FIN:
-            // send fin
-            ReldatHelper.sendFin(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
+          state = FIN_WAIT_1;
+          System.out.println("FIN");
+          break;
+        case FIN_WAIT_1:
+          // wait for ack from server
+          byte[] potentialAck = new byte[ReldatConstants.HEADER_SIZE];
+          potentialAck = ReldatHelper.readPacket(clientSocket, ReldatConstants.HEADER_SIZE);
 
-            state = FIN_WAIT_1;
-            System.out.println("FIN");
-            break;
-          case FIN_WAIT_1:
-            // wait for ack from server
-            byte[] potentialAck = new byte[ReldatConstants.HEADER_SIZE];
-            potentialAck = ReldatHelper.readPacket(clientSocket, ReldatConstants.HEADER_SIZE);
-
-            if (ReldatHelper.checkFinAck(potentialAck)) {
-              ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
-              state = TIME_WAIT;
-            } else if (ReldatHelper.checkReset(potentialAck)) {
-              throw new SocketTimeoutException();
-            }
-            System.out.println("FIN_WAIT_1");
-            break;
-          case TIME_WAIT:
-            // wait for 30 seconds and
-            System.out.println("TIME_WAIT");
-            TimeUnit.SECONDS.sleep(5);
-            clientSocket.close();
-            System.exit(0);
-        }
+          if (ReldatHelper.checkFinAck(potentialAck)) {
+            ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
+            state = TIME_WAIT;
+          } else if (ReldatHelper.checkReset(potentialAck)) {
+            throw new SocketTimeoutException();
+          }
+          System.out.println("FIN_WAIT_1");
+          break;
+        case TIME_WAIT:
+          // wait for 30 seconds and
+          System.out.println("TIME_WAIT");
+          TimeUnit.SECONDS.sleep(5);
+          clientSocket.close();
+          System.exit(0);
       }
-    } catch (SocketTimeoutException e) {
-      state = CLOSED;
-      System.out.println("Error disconnecting. Returning back to LISTEN");
-      return;
     }
   }
-
-  /*public void run(String ip, String hostname, int windowSize) throws IOException {
-    String wholeMessage = "";
-    try {
-      BufferedReader reader = new BufferedReader(new FileReader(msg));
-      String message;
-      while ((message = reader.readLine()) != null) {
-        wholeMessage = wholeMessage + message + " ";
-      }
-      reader.close();
-    } catch (FileNotFoundException e) {
-      System.out.println("Could not find file " + msg);
-      return;
-    }
-
-    // create a datagram socket
-    DatagramSocket clientSocket = new DatagramSocket();
-
-    boolean gotResponse = false;
-    int tries = 0;
-
-    // wait for 2 seconds for a reply
-    clientSocket.setSoTimeout(2000);
-
-    // if the client has not received a response within 2 seconds, retry the query 3 times
-    while (!gotResponse && tries < 3) {
-      // send request from server
-      tries++;
-      try {
-        InetAddress ipAdress = InetAddress.getByName(ip);
-        byte[] sendData = new byte[PACKET_SIZE];
-        byte[] receiveData = new byte[1024];
-        sendData = wholeMessage.getBytes();
-        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ipAdress, portNumber);
-        clientSocket.send(sendPacket);
-
-        // get response from server
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        clientSocket.receive(receivePacket);
-
-        // print response without the extra whitespace
-        String response = new String(receivePacket.getData());
-        String responseTrim = new String(receivePacket.getData(), 0, receivePacket.getLength());
-        System.out.println("Response from server: " + responseTrim);
-        clientSocket.close();
-        gotResponse = true;
-      } catch (SocketTimeoutException e) {
-        if (tries <= 3) {
-          System.out.println("Timed out. Try number: " + tries + ". Will try again!");
-        }
-      }
-    }
-
-    if (gotResponse == false) {
-      System.out.println("0 -1 Error");
-    }
-
-  }*/
 }
