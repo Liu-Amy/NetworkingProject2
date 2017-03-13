@@ -1,0 +1,92 @@
+package reldat;
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import static reldat.ReldatClientState.*;
+
+public class ReldatSRSender {
+
+  public DatagramSocket socket;
+  public int windowSize;
+  public InetAddress ip;
+  public int portNum;
+
+  public ReldatSRSender(DatagramSocket socket, int windowSize, InetAddress ip, int portNum) {
+    this.socket = socket;
+    this.windowSize = windowSize;
+    this.ip = ip;
+    this.portNum = portNum;
+  }
+
+  public void send(String filePath) throws IOException {
+    File f = new File(filePath);
+    // calculate number of packets to send for receive buffer
+    int fileSize = (int) f.length();
+    int numPacketsToSend = (int) Math.ceil((double) fileSize / ReldatConstants.PAYLOAD_SIZE);
+
+    if (windowSize > numPacketsToSend) {
+      windowSize = numPacketsToSend;
+    }
+
+    Boolean running = true;
+    String[] srBuffer = new String[numPacketsToSend];
+    int windowIndex = 0;
+
+    // send packets in window
+    (new ReldatFileSender(socket, filePath, ip,
+      portNum, numPacketsToSend, windowIndex)).run();
+
+    while (running) {
+      // receive packet from server
+      byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];
+      potentialReply = ReldatHelper.readPacket(socket, ReldatConstants.PACKET_SIZE);
+
+      // get header of potential reply
+      byte[] replyHeader = Arrays.copyOfRange(potentialReply, 0, ReldatConstants.HEADER_SIZE);
+
+      int replyAckNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 22, 26));
+
+      if (replyAckNum >= windowIndex
+          && replyAckNum < windowIndex + windowSize) {
+        // remove header from packet received
+        byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
+        potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialByteUpperCase.length);
+
+        // convert byte array to char array
+        char[] potentialCharUpperCase = new char[ReldatConstants.PAYLOAD_SIZE];
+        potentialCharUpperCase = ReldatHelper.byteArrayToUpperCharArray(potentialByteUpperCase);
+
+        //System.out.println("UPPERCASE: " + String.valueOf(potentialCharUpperCase));
+        System.out.println(replyAckNum);
+
+        // save into buffer
+        srBuffer[replyAckNum] = new String(potentialCharUpperCase);
+
+        // move window index
+        while (srBuffer[windowIndex] != null
+            && windowIndex + windowSize < srBuffer.length) {
+          windowIndex++;
+        }
+
+        // if we're at the last window and
+        // everything in the window is saved
+        // then terminate
+        if (windowIndex + windowSize == srBuffer.length) {
+          Boolean full = true;
+          for (int i = 0; i < windowSize; i++) {
+            if (srBuffer[windowIndex + i] == null) {
+              full = false;
+            }
+          }
+          running = !full;
+        }
+      }
+    }
+
+    // Finish everything
+    System.out.println("File has finished downloading from server.");
+
+    ReldatClientHelper.state = ACCEPT_INPUT;
+  }
+}

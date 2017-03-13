@@ -5,43 +5,41 @@ import java.net.*;
 import java.util.*;
 
 public class ReldatFileSender {
-  public static int seqNum = 0;
+  public DatagramSocket socket;
+  public String filePath;
+  public InetAddress ip;
+  public int portNum;
+  public int numPacketsToSend;
+  public int startIndex;
 
-  public static void sendFile(DatagramSocket socket, String filePath,
-      InetAddress ip, int portNum, int windowSize) throws IOException {
+  public ReldatFileSender(DatagramSocket socket, String filePath,
+      InetAddress ip, int portNum, int numPacketsToSend, int startIndex) {
+    this.socket = socket;
+    this.filePath = filePath;
+    this.ip = ip;
+    this.portNum = portNum;
+    this.numPacketsToSend = numPacketsToSend;
+    this.startIndex = startIndex;
+  }
+
+  public void run() {
+    int seqNum = startIndex;
     try {
       // buffer to store packet
       byte[] packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
       BufferedInputStream in = new BufferedInputStream(new FileInputStream(filePath));
-      while ((in.read(packetData, 0, ReldatConstants.PAYLOAD_SIZE)) != -1) {
-        // sends packet of data
+
+      while ((in.read(packetData, startIndex, ReldatConstants.PAYLOAD_SIZE)) != -1
+          && numPacketsToSend > 0) {
+        numPacketsToSend--;
         ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, 0);
-        // increment sequence number
         seqNum++;
-        // wait for ack (no selective repeat for now)
         packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
-
-        // receive packet from server
-        byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];
-        potentialReply = ReldatHelper.readPacket(socket, ReldatConstants.PACKET_SIZE);
-
-        // get header of potential reply
-        byte[] replyHeader = Arrays.copyOfRange(potentialReply, 0, ReldatConstants.HEADER_SIZE);
-
-        int replyAckNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 22, 26));
-
-        // remove header from packet received
-        byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
-        potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialByteUpperCase.length);
-
-        // convert byte array to char array
-        char[] potentialCharUpperCase = new char[ReldatConstants.PAYLOAD_SIZE];
-        potentialCharUpperCase = ReldatHelper.byteArrayToUpperCharArray(potentialByteUpperCase);
-
-        System.out.println("UPPERCASE: " + String.valueOf(potentialCharUpperCase));
       }
     } catch(FileNotFoundException e) {
       System.out.println("File not found");
+    } catch(IOException e) {
+      System.out.println("IO Exception in ReldatFileSender");
     }
   }
 }
