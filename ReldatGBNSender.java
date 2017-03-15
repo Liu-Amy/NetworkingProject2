@@ -12,6 +12,8 @@ public class ReldatGBNSender {
   public InetAddress ip;
   public int portNum;
 
+  public int shifts;
+
   public ReldatGBNSender(DatagramSocket socket, int windowSize, InetAddress ip, int portNum) {
     this.socket = socket;
     this.windowSize = windowSize;
@@ -38,10 +40,14 @@ public class ReldatGBNSender {
       System.out.println("windowIndex: " + windowIndex);
       System.out.println("windowSize: " + windowSize);
 
-      (new ReldatFileSender(socket, filePath, ip,
-        portNum, windowSize, windowIndex)).run();
+      if (windowIndex == 0) {
+        shifts = windowSize;
+      }
 
-      for (int i = 0 ; i < windowSize; i++) {
+      (new ReldatFileSender(socket, filePath, ip,
+        portNum, windowSize, windowIndex, shifts)).run();
+
+      for (int i = 0 ; i < shifts; i++) {
         // receive packet from server
         byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];
         potentialReply = ReldatHelper.readPacket(socket, ReldatConstants.PACKET_SIZE);
@@ -70,9 +76,11 @@ public class ReldatGBNSender {
         }
       }
         // move window index
+        shifts = 0;
         while (srBuffer[windowIndex] != null
             && windowIndex + windowSize < srBuffer.length) {
           windowIndex++;
+          shifts++;
           System.out.println("this windowIndex: " + windowIndex);
         }
 
