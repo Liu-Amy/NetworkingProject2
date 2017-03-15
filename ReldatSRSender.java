@@ -85,6 +85,19 @@ public class ReldatSRSender {
     }
 
     // Finish everything
+    try {
+      PrintWriter writer = new PrintWriter(filePath.split("\\.")[0]  + "-received." + filePath.split("\\.")[1], "UTF-8");
+      for (int i = 0; i < srBuffer.length; i++) {
+        writer.append(srBuffer[i]);
+      }
+      writer.close();
+    } catch (IOException e) {
+      System.out.println("Problem writing transformed file");
+    }
+
+    // System.out.println("filePath " + filePath);
+    // System.out.println("0" + filePath.split("\\.")[0]);
+    // System.out.println("1" + filePath.split("\\.")[1]);
     System.out.println("File has finished downloading from server.");
 
     ReldatClientHelper.state = ACCEPT_INPUT;
