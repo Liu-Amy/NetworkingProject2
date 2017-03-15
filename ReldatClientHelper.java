@@ -60,7 +60,7 @@ public class ReldatClientHelper {
             break;
           case FILE_TRANSFER:
             String filePath = input.split(" ")[1];
-            ReldatSRSender sender = new ReldatSRSender(clientSocket, 4, address, portNum);
+            ReldatGBNSender sender = new ReldatGBNSender(clientSocket, 4, address, portNum);
             sender.send(filePath);
             break;
         }
