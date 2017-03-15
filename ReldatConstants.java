@@ -10,4 +10,5 @@ public class ReldatConstants {
   public static final int ACK_SIZE = 4;
   public static final int FLAGS_SIZE = 1;
   public static final int TIMEOUT = 15000;
+  public static final int DATA_TIMEOUT = 5000;
 }

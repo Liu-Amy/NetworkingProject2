@@ -33,13 +33,14 @@ public class ReldatFileReceiver {
         // convert byte array to upper case char array
         char[] upperCharArrayData = ReldatHelper.byteArrayToUpperCharArray(data);
 
-        System.out.println("UPPERCASE: " + String.valueOf(upperCharArrayData));
+        //System.out.println("UPPERCASE: " + String.valueOf(upperCharArrayData));
 
         // convert uppercase char array to byte array
         byte[] upperByteArrayData = ReldatHelper.charArraytoByteArray(upperCharArrayData);
 
         // set ack number to sequence number from client
         int ackNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(header, 18, 22));
+        System.out.println(ackNum);
 
         // send byte array to client
         ReldatHelper.sendPacketWithHeader(serverSocket, upperByteArrayData, clientAddress, clientPort, 0, ackNum);
