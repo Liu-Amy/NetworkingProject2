@@ -38,7 +38,8 @@ public class ReldatFileSender {
       while ((in.read(packetData, 0, ReldatConstants.PAYLOAD_SIZE)) != -1
           && shifts > 0) {
         shifts--;
-        ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, seqNum);
+        ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, 0);
+        ReldatPacketTimers.createTimer(seqNum, socket, packetData, ip, portNum);
         System.out.println("seqNum: " + seqNum);
         seqNum++;
         packetData = new byte[ReldatConstants.PAYLOAD_SIZE];

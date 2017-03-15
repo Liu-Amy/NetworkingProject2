@@ -47,55 +47,55 @@ public class ReldatGBNSender {
       (new ReldatFileSender(socket, filePath, ip,
         portNum, windowSize, windowIndex, shifts)).run();
 
-      for (int i = 0 ; i < shifts; i++) {
-        // receive packet from server
-        byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];
-        potentialReply = ReldatHelper.readPacket(socket, ReldatConstants.PACKET_SIZE);
+      // receive packet from server
+      byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];
+      potentialReply = ReldatHelper.readPacket(socket, ReldatConstants.PACKET_SIZE);
 
-        // get header of potential reply
-        byte[] replyHeader = Arrays.copyOfRange(potentialReply, 0, ReldatConstants.HEADER_SIZE);
+      // get header of potential reply
+      byte[] replyHeader = Arrays.copyOfRange(potentialReply, 0, ReldatConstants.HEADER_SIZE);
 
-        int replyAckNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 22, 26));
+      int replyAckNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 22, 26));
 
-        // if packet is within the window
-        if (replyAckNum >= windowIndex
-            && replyAckNum < windowIndex + windowSize) {
-          // remove header from packet received
-          byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
-          potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialByteUpperCase.length);
+      // if packet is within the window
+      if (replyAckNum >= windowIndex
+          && replyAckNum < windowIndex + windowSize) {
+        // remove header from packet received
+        byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
+        potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialByteUpperCase.length);
 
-          // convert byte array to char array
-          char[] potentialCharUpperCase = new char[ReldatConstants.PAYLOAD_SIZE];
-          potentialCharUpperCase = ReldatHelper.byteArrayToUpperCharArray(potentialByteUpperCase);
+        // convert byte array to char array
+        char[] potentialCharUpperCase = new char[ReldatConstants.PAYLOAD_SIZE];
+        potentialCharUpperCase = ReldatHelper.byteArrayToUpperCharArray(potentialByteUpperCase);
 
-          //System.out.println("UPPERCASE: " + String.valueOf(potentialCharUpperCase));
-          System.out.println("replyAckNum: " + replyAckNum);
+        //System.out.println("UPPERCASE: " + String.valueOf(potentialCharUpperCase));
+        System.out.println("replyAckNum: " + replyAckNum);
 
-          // save into buffer
-          srBuffer[replyAckNum] = new String(potentialCharUpperCase);
-        }
+        ReldatPacketTimers.cancelTimer(replyAckNum);
+
+        // save into buffer
+        srBuffer[replyAckNum] = new String(potentialCharUpperCase);
       }
-        // move window index
-        shifts = 0;
-        while (srBuffer[windowIndex] != null
-            && windowIndex + windowSize < srBuffer.length) {
-          windowIndex++;
-          shifts++;
-          System.out.println("this windowIndex: " + windowIndex);
-        }
+      // move window index
+      shifts = 0;
+      while (srBuffer[windowIndex] != null
+          && windowIndex + windowSize < srBuffer.length) {
+        windowIndex++;
+        shifts++;
+        System.out.println("this windowIndex: " + windowIndex);
+      }
 
-        // if we're at the last window and
-        // everything in the window is saved
-        // then terminate
-        if (windowIndex + windowSize == srBuffer.length) {
-          Boolean full = true;
-          for (int i = 0; i < windowSize; i++) {
-            if (srBuffer[windowIndex + i] == null) {
-              full = false;
-            }
+      // if we're at the last window and
+      // everything in the window is saved
+      // then terminate
+      if (windowIndex + windowSize == srBuffer.length) {
+        Boolean full = true;
+        for (int i = 0; i < windowSize; i++) {
+          if (srBuffer[windowIndex + i] == null) {
+            full = false;
           }
-          running = !full;
         }
+        running = !full;
+      }
 
     }
 
