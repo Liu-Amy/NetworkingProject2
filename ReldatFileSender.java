@@ -28,11 +28,16 @@ public class ReldatFileSender {
       // buffer to store packet
       byte[] packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
       BufferedInputStream in = new BufferedInputStream(new FileInputStream(filePath));
+      System.out.println("THIS IS THE startIndex: " + startIndex);
 
-      while ((in.read(packetData, startIndex, ReldatConstants.PAYLOAD_SIZE)) != -1
+      // read from file at offset
+      in.skip(startIndex*ReldatConstants.PAYLOAD_SIZE);
+
+      while ((in.read(packetData, 0, ReldatConstants.PAYLOAD_SIZE)) != -1
           && numPacketsToSend > 0) {
         numPacketsToSend--;
-        ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, 0);
+        ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, seqNum);
+        System.out.println("seqNum: " + seqNum);
         seqNum++;
         packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
       }
