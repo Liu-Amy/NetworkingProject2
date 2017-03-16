@@ -37,7 +37,7 @@ public class ReldatClientHelper {
             byte[] potentialSynAck = ReldatHelper.readPacketClient(clientSocket, ReldatConstants.HEADER_SIZE);
 
             if (ReldatHelper.checkSynAck(potentialSynAck)) {
-              //ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
+              ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
               state = ACCEPT_INPUT;
             } else {
               // resend syn if synack not received by timeout
