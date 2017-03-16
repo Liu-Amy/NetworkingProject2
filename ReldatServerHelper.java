@@ -60,7 +60,8 @@ public class ReldatServerHelper {
             disconnect();
         }
       } catch (SocketTimeoutException e) {
-        System.out.println("Timeout reached. Connection to client lost.");
+        //System.out.println("Timeout reached. Connection to client lost.");
+        System.out.println("Timeout reached. Now waiting for connection from client.");
         state = LISTEN;
       }
     }
