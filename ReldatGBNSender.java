@@ -49,12 +49,18 @@ public class ReldatGBNSender {
 
       // receive packet from server
       byte[] potentialReply = new byte[ReldatConstants.PACKET_SIZE];
-      potentialReply = ReldatHelper.readPacket(socket, ReldatConstants.PACKET_SIZE);
+      potentialReply = ReldatHelper.readPacketClient(socket, ReldatConstants.PACKET_SIZE);
 
       // get header of potential reply
       byte[] replyHeader = Arrays.copyOfRange(potentialReply, 0, ReldatConstants.HEADER_SIZE);
 
-      int replyAckNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 22, 26));
+      // if checksum is empty do nothing
+      byte[] checksum = Arrays.copyOfRange(replyHeader, 0, 16);
+      if (ReldatHelper.byteArrToInt(checksum) == 0) {
+        continue;
+      }
+
+      int replyAckNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 20, 24));
 
       // if packet is within the window
       if (replyAckNum >= windowIndex

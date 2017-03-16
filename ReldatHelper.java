@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.*;
 import java.net.*;
 import reldat.*;
+import java.util.*;
 import java.security.MessageDigest;
 
 public class ReldatHelper {
@@ -27,9 +28,6 @@ public class ReldatHelper {
     int buffersize = data.length;
 
     index += ReldatConstants.CHECKSUM_SIZE;
-    headerBuffer.putInt(index, buffersize);
-
-    index += ReldatConstants.BUFFER_SIZE;
     headerBuffer.putInt(index, seqNum);
 
     index += ReldatConstants.SEQ_SIZE;
@@ -91,6 +89,16 @@ public class ReldatHelper {
     byte[] buffer = new byte[bufferSize];
     DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
     socket.receive(receivePacket);
+    return buffer;
+  }
+
+  public static byte[] readPacketClient(DatagramSocket socket, int bufferSize) throws IOException {
+    byte[] buffer = new byte[bufferSize];
+    DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
+    socket.receive(receivePacket);
+    if (checkReset(Arrays.copyOfRange(buffer, 24, 25))) {
+      throw new SocketTimeoutException();
+    }
     return buffer;
   }
 

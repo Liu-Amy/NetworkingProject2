@@ -27,6 +27,11 @@ public class ReldatFileReceiver {
       byte[] checksum = Arrays.copyOfRange(header, 0, 16);
       byte[] other = ReldatHelper.calculateChecksum(data);
 
+      // if checksum is empty do nothing
+      if (ReldatHelper.byteArrToInt(checksum) == 0) {
+        continue;
+      }
+
       // if checksums are equal continue, if not do nothing
       if (Arrays.equals(ReldatHelper.calculateChecksum(data), checksum)) {
 
@@ -39,7 +44,7 @@ public class ReldatFileReceiver {
         byte[] upperByteArrayData = ReldatHelper.charArraytoByteArray(upperCharArrayData);
 
         // set ack number to sequence number from client
-        int ackNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(header, 18, 22));
+        int ackNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(header, 16, 20));
         System.out.println(ackNum);
 
         // send byte array to client
@@ -51,4 +56,3 @@ public class ReldatFileReceiver {
     }
   }
 }
-

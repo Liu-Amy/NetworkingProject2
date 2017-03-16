@@ -34,7 +34,7 @@ public class ReldatClientHelper {
             break;
           case SYN_SENT:
             // waits for syn ack
-            byte[] potentialSynAck = ReldatHelper.readPacket(clientSocket, ReldatConstants.HEADER_SIZE);
+            byte[] potentialSynAck = ReldatHelper.readPacketClient(clientSocket, ReldatConstants.HEADER_SIZE);
 
             if (ReldatHelper.checkSynAck(potentialSynAck)) {
               ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
@@ -60,13 +60,14 @@ public class ReldatClientHelper {
             break;
           case FILE_TRANSFER:
             String filePath = input.split(" ")[1];
-            ReldatGBNSender sender = new ReldatGBNSender(clientSocket, 4, address, portNum);
+            ReldatGBNSender sender = new ReldatGBNSender(clientSocket, windowSize, address, portNum);
             sender.send(filePath);
             break;
         }
       } catch (SocketTimeoutException e) {
-        System.out.println("Timeout reached. Communication with server lost.");
-        state = CLOSED;
+        System.out.println("Timeout reached. Communication with server lost. Shutting down");
+        clientSocket.close();
+        System.exit(0);
       }
     }
   }
@@ -87,7 +88,7 @@ public class ReldatClientHelper {
         case FIN_WAIT_1:
           // wait for ack from server
           byte[] potentialAck = new byte[ReldatConstants.HEADER_SIZE];
-          potentialAck = ReldatHelper.readPacket(clientSocket, ReldatConstants.HEADER_SIZE);
+          potentialAck = ReldatHelper.readPacketClient(clientSocket, ReldatConstants.HEADER_SIZE);
 
           if (ReldatHelper.checkFinAck(potentialAck)) {
             ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);

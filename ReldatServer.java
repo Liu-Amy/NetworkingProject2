@@ -6,25 +6,20 @@ import java.util.*;
 import reldat.*;
 
 public class ReldatServer {
-  // method to check if all characters in a string are ascii characters
-  public static boolean isStringAscii(String string) {
-    if (string == null) {
-      return false;
-    }
-    if (string.matches("[\\x00-\\x7F]+")) {
-      return true;
-    }
-    return false;
-  }
-
   public static void main(String[] args) throws IOException {
+    if (args.length != 2) {
+      System.out.println("Usage: java reldat.ReldatServer PortNumber WindowSize");
+      System.exit(1);
+    }
+
+    int portNumber = Integer.parseInt(args[0]);
+
     ReldatServerHelper reldatServer = new ReldatServerHelper();
     try {
-      reldatServer.listen(8088);
+      reldatServer.listen(portNumber);
     } catch(Exception e) {
       System.out.println(e.getMessage());
       System.out.println(e.getClass().getCanonicalName());
     }
   }
 }
-

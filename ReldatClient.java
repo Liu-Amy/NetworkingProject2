@@ -11,12 +11,21 @@ public class ReldatClient {
 
   public static void main(String[] args) throws IOException {
     //ReldatClientHelper reldatClient = new ReldatClientHelper();
+
+    if (args.length != 2 || !args[0].contains(":")) {
+      System.out.println("Usage: java reldat.ReldatClient Host:PortNumber WindowSize");
+      System.exit(1);
+    }
+
+    String ip = args[0].split(":")[0];
+    int portNumber = Integer.parseInt(args[0].split(":")[1]);
+    int windowSize = Integer.parseInt(args[1]);
+
     try {
-      ReldatClientHelper.connect("localhost", 8088, 200);
+      ReldatClientHelper.connect(ip, portNumber, windowSize);
     } catch(Exception e) {
       System.out.println(e.getMessage());
       System.out.println(e.getClass().getCanonicalName());
     }
   }
 }
-
