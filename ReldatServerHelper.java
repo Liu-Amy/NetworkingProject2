@@ -85,15 +85,4 @@ public class ReldatServerHelper {
       }
     }
   }
-
-  // method to check if all characters in a string are ascii characters
-  public static boolean isStringAscii(String string) {
-    if (string == null) {
-      return false;
-    }
-    if (string.matches("[\\x00-\\x7F]+")) {
-      return true;
-    }
-    return false;
-  }
 }

@@ -62,6 +62,8 @@ public class ReldatClientHelper {
             String filePath = input.split(" ")[1];
             ReldatGBNSender sender = new ReldatGBNSender(clientSocket, windowSize, address, portNum);
             sender.send(filePath);
+            System.out.println("File has finished downloading from server.");
+            state = ACCEPT_INPUT;
             break;
         }
       } catch (SocketTimeoutException e) {

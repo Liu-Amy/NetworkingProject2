@@ -115,12 +115,5 @@ public class ReldatGBNSender {
     } catch (IOException e) {
       System.out.println("Problem writing transformed file");
     }
-
-    // System.out.println("filePath " + filePath);
-    // System.out.println("0" + filePath.split("\\.")[0]);
-    // System.out.println("1" + filePath.split("\\.")[1]);
-    System.out.println("File has finished downloading from server.");
-
-    ReldatClientHelper.state = ACCEPT_INPUT;
   }
 }
