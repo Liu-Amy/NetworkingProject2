@@ -10,4 +10,9 @@ public class ReldatConstants {
   public static final int FLAGS_SIZE = 1;
   public static final int TIMEOUT = 15000;
   public static final int DATA_TIMEOUT = 5000;
+  public static final Boolean DEBUG_MODE = false;
+  public static final int LOSS_RATE = 5;
+  public static final int CORRUPT_RATE = 5;
+  public static final int DELAY_MIN = 70;
+  public static final int DELAY_MAX = 130;
 }

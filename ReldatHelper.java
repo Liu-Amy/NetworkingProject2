@@ -6,15 +6,34 @@ import java.net.*;
 import reldat.*;
 import java.util.*;
 import java.security.MessageDigest;
+import java.util.concurrent.*;
 
 public class ReldatHelper {
 
-  public static void sendPacket(DatagramSocket socket, byte[] data, InetAddress ip, int port) throws IOException {
+  public static void sendPacket(DatagramSocket socket, byte[] data, InetAddress ip, int port) throws Exception {
+    if (ReldatConstants.DEBUG_MODE) {
+      // delay
+      Random rand = new Random();
+      int randomNum = rand.nextInt((
+        ReldatConstants.DELAY_MAX - ReldatConstants.DELAY_MIN) + 1)
+        + ReldatConstants.DELAY_MIN;
+      Thread.sleep(randomNum);
+      System.out.println("delayed"+randomNum);
+    }
     DatagramPacket sendPacket = new DatagramPacket(data, data.length, ip, port);
     socket.send(sendPacket);
   }
 
-  public static void sendPacketWithHeader(DatagramSocket socket, byte[] data, InetAddress ip, int port, int seqNum, int ackNum) throws IOException {
+  public static void sendPacketWithHeader(DatagramSocket socket, byte[] data, InetAddress ip, int port, int seqNum, int ackNum) throws Exception {
+    if (ReldatConstants.DEBUG_MODE) {
+      // delay
+      Random rand = new Random();
+      int randomNum = rand.nextInt((
+        ReldatConstants.DELAY_MAX - ReldatConstants.DELAY_MIN) + 1)
+        + ReldatConstants.DELAY_MIN;
+      Thread.sleep(randomNum);
+      System.out.println("delayed"+randomNum);
+    }
     byte[] merged = mergeByteArray(createHeader(data, seqNum, ackNum), data);
     DatagramPacket sendPacket = new DatagramPacket(merged, merged.length, ip, port);
     socket.send(sendPacket);
@@ -56,30 +75,30 @@ public class ReldatHelper {
     }
   }
 
-  public static void sendAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
+  public static void sendAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws Exception {
     byte[] ack = new byte[headerSize];
     ack[headerSize - 1] = (byte) 0b00100000;
     sendPacket(socket, ack, ip, port);
   }
 
-  public static void sendSynAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
+  public static void sendSynAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws Exception {
     byte[] ack = new byte[headerSize];
     ack[headerSize - 1] = (byte) 0b10100000;
     sendPacket(socket, ack, ip, port);
   }
 
-  public static void sendFinAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
+  public static void sendFinAck(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws Exception {
     byte[] ack = new byte[headerSize];
     ack[headerSize - 1] = (byte) 0b01100000;
     sendPacket(socket, ack, ip, port);
   }
-  public static void sendReset(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
+  public static void sendReset(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws Exception {
     byte[] ack = new byte[headerSize];
     ack[headerSize - 1] = (byte) 0b00010000;
     sendPacket(socket, ack, ip, port);
   }
 
-  public static void sendFin(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws IOException {
+  public static void sendFin(DatagramSocket socket, InetAddress ip, int port, int headerSize) throws Exception {
     byte[] ack = new byte[headerSize];
     ack[headerSize - 1] = (byte) 0b01000000;
     sendPacket(socket, ack, ip, port);
@@ -97,7 +116,7 @@ public class ReldatHelper {
     DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
     socket.receive(receivePacket);
     if (checkReset(Arrays.copyOfRange(buffer, 24, 25))) {
-      throw new SocketTimeoutException();
+      throw new UnsupportedOperationException();
     }
     return buffer;
   }

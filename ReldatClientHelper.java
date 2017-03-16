@@ -37,7 +37,7 @@ public class ReldatClientHelper {
             byte[] potentialSynAck = ReldatHelper.readPacketClient(clientSocket, ReldatConstants.HEADER_SIZE);
 
             if (ReldatHelper.checkSynAck(potentialSynAck)) {
-              ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
+              //ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
               state = ACCEPT_INPUT;
             } else {
               // resend syn if synack not received by timeout
@@ -70,6 +70,10 @@ public class ReldatClientHelper {
         System.out.println("Timeout reached. Communication with server lost. Shutting down");
         clientSocket.close();
         System.exit(0);
+      } catch (UnsupportedOperationException e) {
+        System.out.println("RESET command received from server. Shutting down");
+        clientSocket.close();
+        System.exit(0);
       }
     }
   }
@@ -96,7 +100,8 @@ public class ReldatClientHelper {
             ReldatHelper.sendAck(clientSocket, address, portNum, ReldatConstants.HEADER_SIZE);
             state = TIME_WAIT;
           } else if (ReldatHelper.checkReset(potentialAck)) {
-            throw new SocketTimeoutException();
+            //throw new SocketTimeoutException();
+            throw new UnsupportedOperationException();
           }
           System.out.println("FIN_WAIT_1");
           break;

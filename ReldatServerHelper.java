@@ -48,6 +48,7 @@ public class ReldatServerHelper {
               // if ack is lost, client might assume connection is
               // established so we need to send a RST packet to
               // reset connection
+              System.out.println("Handshake not completed. RESET sent to client. Now waiting for connection from client.");
               ReldatHelper.sendReset(serverSocket, clientAddress, clientPort, ReldatConstants.HEADER_SIZE);
               state = LISTEN;
             }

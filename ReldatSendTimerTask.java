@@ -25,6 +25,8 @@ public class ReldatSendTimerTask extends TimerTask {
       ReldatHelper.sendPacketWithHeader(socket, data, ip, portNum, seqNum, 0);
     } catch(IOException e) {
       System.out.println("IOException in ReldatSendTimerTask");
+    } catch(Exception e) {
+      System.out.println("Exception in ReldatSendTimerTask");
     }
   }
 }

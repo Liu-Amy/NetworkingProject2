@@ -34,15 +34,12 @@ public class ReldatGBNSender {
     Boolean running = true;
     String[] srBuffer = new String[numPacketsToSend];
     int windowIndex = 0;
+    shifts = windowSize;
 
     while (running) {
       // send packets in window
       System.out.println("windowIndex: " + windowIndex);
       System.out.println("windowSize: " + windowSize);
-
-      if (windowIndex == 0) {
-        shifts = windowSize;
-      }
 
       (new ReldatFileSender(socket, filePath, ip,
         portNum, windowSize, windowIndex, shifts)).run();
@@ -65,7 +62,6 @@ public class ReldatGBNSender {
       // if packet is within the window
       if (replyAckNum >= windowIndex
           && replyAckNum < windowIndex + windowSize) {
-        // remove header from packet received
         byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
         potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialByteUpperCase.length);
 

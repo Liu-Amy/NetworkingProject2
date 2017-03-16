@@ -6,13 +6,47 @@ import java.util.*;
 
 public class ReldatFileReceiver {
 
-  public static void handlePacket (DatagramSocket serverSocket, InetAddress clientAddress, int clientPort) throws IOException {
+  public static void handlePacket (DatagramSocket serverSocket, InetAddress clientAddress, int clientPort) throws Exception {
     while (true) {
       // get packet from client
       byte[] packet = ReldatHelper.readPacket(serverSocket, ReldatConstants.PACKET_SIZE);
 
       // get header from packet received
       byte[] header = Arrays.copyOfRange(packet, 0, ReldatConstants.HEADER_SIZE);
+
+      if (ReldatConstants.DEBUG_MODE) {
+        Random rand = new Random();
+        int randomNum = rand.nextInt(100 + 1);
+        if (randomNum < ReldatConstants.LOSS_RATE) {
+          System.out.print("PACKET LOST: ");
+          if (ReldatHelper.checkSyn(header)) {
+            System.out.println("SYN");
+          } else if (ReldatHelper.checkAck(header)) {
+            System.out.println("ACK");
+          } else if (ReldatHelper.checkFin(header)) {
+            System.out.println("FIN");
+          } else {
+            int seqNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(header, 16, 20));
+            System.out.println(seqNum);
+          }
+          continue;
+        }
+        randomNum = rand.nextInt(100 + 1);
+        if (randomNum < ReldatConstants.CORRUPT_RATE) {
+          System.out.print("PACKET CORRUPTED: ");
+          if (ReldatHelper.checkSyn(header)) {
+            System.out.println("SYN");
+          } else if (ReldatHelper.checkAck(header)) {
+            System.out.println("ACK");
+          } else if (ReldatHelper.checkFin(header)) {
+            System.out.println("FIN");
+          } else {
+            int seqNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(header, 16, 20));
+            System.out.println(seqNum);
+          }
+          header[0] = (byte) 0;
+        }
+      }
 
       // fin check
       if (ReldatHelper.checkFin(header)) {
