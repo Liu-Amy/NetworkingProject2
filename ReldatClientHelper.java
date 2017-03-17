@@ -52,7 +52,7 @@ public class ReldatClientHelper {
             input = scan.nextLine();
             if (input.equals("disconnect")) {
               disconnect(ip, portNum);
-            } else if (input.matches("(transform).*(.txt)")) {
+            } else if (input.matches("(transform)\\ .+\\..+")) {
               state = FILE_TRANSFER;
             } else {
               System.out.println("Invalid input. Please try again.");
