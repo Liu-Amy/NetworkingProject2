@@ -42,6 +42,7 @@ server command line output:
       Timeout reached. Now waiting for connection from client.
       LISTENING ON PORT 3001
       Timeout reached. Now waiting for connection from client.
+      LISTENING ON PORT 3001
       ...
 
 ********************* only client running sample *********************
@@ -52,8 +53,23 @@ client command line output:
       Timeout reached. Communication with server lost. Shutting down
 
 ***** connecting then disconnecting on reliable connection *****
+server command line input:
+      java reldat.ReldatServer 3001 10
 client command line input:
       java reldat.ReldatClient 127.0.0.1:3001 4
+server command line output:
+      LISTENING ON PORT 3001
+      SYN RECEIVED
+      CONNECTION ESTABLISHED
+      CLOSE_WAIT
+      LAST_ACK
+      LISTENING ON PORT 3001
 client command line output:
       Sending SYN
-      Timeout reached. Communication with server lost. Shutting down
+      SYN_SENT STATE
+      CONNECTION ESTABLISHED
+      Enter input:
+      disconnect
+      FIN
+      FIN_WAIT_1
+      TIME_WAIT
