@@ -37,7 +37,6 @@ public class ReldatHelper {
     byte[] merged = mergeByteArray(createHeader(data, seqNum, ackNum), data);
     DatagramPacket sendPacket = new DatagramPacket(merged, merged.length, ip, port);
     socket.send(sendPacket);
-    socket.send(sendPacket);
   }
 
   public static byte[] createHeader(byte[] data, int seqNum, int ackNum) {
