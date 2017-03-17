@@ -5,7 +5,7 @@ import java.net.*;
 import java.util.*;
 import static reldat.ReldatClientState.*;
 
-public class ReldatGBNSender {
+public class ReldatSRSender {
 
   public DatagramSocket socket;
   public int windowSize;
@@ -14,7 +14,7 @@ public class ReldatGBNSender {
 
   public int shifts;
 
-  public ReldatGBNSender(DatagramSocket socket, int windowSize, InetAddress ip, int portNum) {
+  public ReldatSRSender(DatagramSocket socket, int windowSize, InetAddress ip, int portNum) {
     this.socket = socket;
     this.windowSize = windowSize;
     this.ip = ip;
