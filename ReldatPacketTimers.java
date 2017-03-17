@@ -9,11 +9,15 @@ public class ReldatPacketTimers {
 
   public static void createTimer(int seqNum, DatagramSocket socket,
       byte[] data, InetAddress ip, int portNum) {
-    Timer timer = new Timer();
-    packetTimers.put(seqNum, timer);
-    timer.schedule((new ReldatSendTimerTask(seqNum, socket, data, ip, portNum)),
-      ReldatConstants.DATA_TIMEOUT,
-      ReldatConstants.DATA_TIMEOUT);
+    if (packetTimers.get(seqNum) == null) {
+      Timer timer = new Timer();
+      packetTimers.put(seqNum, timer);
+      timer.schedule((new ReldatSendTimerTask(seqNum, socket, data, ip, portNum)),
+        ReldatConstants.DATA_TIMEOUT,
+        ReldatConstants.DATA_TIMEOUT);
+    } else {
+      System.out.println("Client packet was sent twice");
+    }
   }
 
   public static void cancelTimer(int seqNum) {

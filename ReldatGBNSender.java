@@ -52,9 +52,31 @@ public class ReldatGBNSender {
       // get header of potential reply
       byte[] replyHeader = Arrays.copyOfRange(potentialReply, 0, ReldatConstants.HEADER_SIZE);
 
+      if (ReldatConstants.DEBUG_MODE) {
+        Random rand = new Random();
+        int randomNum = rand.nextInt(100 + 1);
+        if (randomNum < ReldatConstants.CORRUPT_RATE) {
+          System.out.print("PACKET CORRUPTED: ");
+          if (ReldatHelper.checkSyn(replyHeader)) {
+            System.out.println("SYN");
+          } else if (ReldatHelper.checkAck(replyHeader)) {
+            System.out.println("ACK");
+          } else if (ReldatHelper.checkFin(replyHeader)) {
+            System.out.println("FIN");
+          } else {
+            int seqNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(replyHeader, 16, 20));
+            System.out.println(seqNum);
+          }
+          replyHeader[0] = (byte) 0;
+        }
+      }
+
       // if checksum is empty do nothing
       byte[] checksum = Arrays.copyOfRange(replyHeader, 0, 16);
+
       if (ReldatHelper.byteArrToInt(checksum) == 0) {
+        // dont resend window by setting shifts = 0
+        shifts = 0;
         continue;
       }
 
@@ -65,13 +87,20 @@ public class ReldatGBNSender {
           && replyAckNum < windowIndex + windowSize
           && srBuffer[replyAckNum] == null) {
         byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
-        potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialByteUpperCase.length);
+
+        // get data of packet
+        potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialReply.length);
+
+        // if packet is corrupted, ignore packet and loop again
+        if (!Arrays.equals(ReldatHelper.calculateChecksum(potentialByteUpperCase), checksum)) {
+          System.out.println("Packet was corrupted");
+          continue;
+        }
 
         // convert byte array to char array
         char[] potentialCharUpperCase = new char[ReldatConstants.PAYLOAD_SIZE];
         potentialCharUpperCase = ReldatHelper.byteArrayToUpperCharArray(potentialByteUpperCase);
 
-        //System.out.println("UPPERCASE: " + String.valueOf(potentialCharUpperCase));
         System.out.println("acked back " + replyAckNum);
 
         ReldatPacketTimers.cancelTimer(replyAckNum);
@@ -85,7 +114,6 @@ public class ReldatGBNSender {
           && windowIndex + windowSize < srBuffer.length) {
         windowIndex++;
         shifts++;
-        System.out.println("this windowIndex: " + windowIndex);
       }
 
       // if we're at the last window and
