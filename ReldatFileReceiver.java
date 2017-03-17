@@ -83,6 +83,7 @@ public class ReldatFileReceiver {
 
         // send byte array to client
         ReldatHelper.sendPacketWithHeader(serverSocket, upperByteArrayData, clientAddress, clientPort, 0, ackNum);
+        //ReldatHelper.sendSynAck(serverSocket, clientAddress, clientPort, ReldatConstants.HEADER_SIZE);
 
       } else {
         System.out.println("Packet was corrupted");
