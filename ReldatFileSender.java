@@ -33,14 +33,15 @@ public class ReldatFileSender {
       int seqNum = startIndex + windowSize - shifts;
 
       // read from file at offset
-      in.skip(seqNum * ReldatConstants.PAYLOAD_SIZE);
+      // off by one, cause seqnum starts at 1
+      in.skip((seqNum - 1) * ReldatConstants.PAYLOAD_SIZE);
 
       while ((in.read(packetData, 0, ReldatConstants.PAYLOAD_SIZE)) != -1
           && shifts > 0) {
         shifts--;
         ReldatHelper.sendPacketWithHeader(socket, packetData, ip, portNum, seqNum, 0);
         ReldatPacketTimers.createTimer(seqNum, socket, packetData, ip, portNum);
-        System.out.println("seqNum: " + seqNum);
+        System.out.println("sent " + seqNum);
         seqNum++;
         packetData = new byte[ReldatConstants.PAYLOAD_SIZE];
       }

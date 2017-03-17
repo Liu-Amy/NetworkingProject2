@@ -10,8 +10,6 @@ public class ReldatClient {
   public final int PACKET_SIZE = HEADER_SIZE + PAYLOAD_SIZE;
 
   public static void main(String[] args) throws IOException {
-    //ReldatClientHelper reldatClient = new ReldatClientHelper();
-
     if (args.length != 2 || !args[0].contains(":")) {
       System.out.println("Usage: java reldat.ReldatClient Host:PortNumber WindowSize");
       System.exit(1);

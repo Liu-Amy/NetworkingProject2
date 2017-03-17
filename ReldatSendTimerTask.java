@@ -22,7 +22,9 @@ public class ReldatSendTimerTask extends TimerTask {
 
   public void run() {
     try {
+      System.out.println("Packet "+seqNum+" resent");
       ReldatHelper.sendPacketWithHeader(socket, data, ip, portNum, seqNum, 0);
+      ReldatHelper.sendSynAck(socket, ip, portNum, ReldatConstants.HEADER_SIZE);
     } catch(IOException e) {
       System.out.println("IOException in ReldatSendTimerTask");
     } catch(Exception e) {

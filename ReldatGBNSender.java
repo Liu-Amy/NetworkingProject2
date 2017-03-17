@@ -32,14 +32,15 @@ public class ReldatGBNSender {
     }
 
     Boolean running = true;
-    String[] srBuffer = new String[numPacketsToSend];
-    int windowIndex = 0;
+    // handle starting seqnum at 1
+    String[] srBuffer = new String[numPacketsToSend + 1];
+    int windowIndex = 1;
     shifts = windowSize;
 
     while (running) {
       // send packets in window
-      System.out.println("windowIndex: " + windowIndex);
-      System.out.println("windowSize: " + windowSize);
+      System.out.println("windowIndex " + windowIndex);
+      //System.out.println("windowSize: " + windowSize);
 
       (new ReldatFileSender(socket, filePath, ip,
         portNum, windowSize, windowIndex, shifts)).run();
@@ -61,7 +62,8 @@ public class ReldatGBNSender {
 
       // if packet is within the window
       if (replyAckNum >= windowIndex
-          && replyAckNum < windowIndex + windowSize) {
+          && replyAckNum < windowIndex + windowSize
+          && srBuffer[replyAckNum] == null) {
         byte[] potentialByteUpperCase = new byte[ReldatConstants.PAYLOAD_SIZE];
         potentialByteUpperCase = Arrays.copyOfRange(potentialReply, ReldatConstants.HEADER_SIZE, potentialByteUpperCase.length);
 
@@ -70,7 +72,7 @@ public class ReldatGBNSender {
         potentialCharUpperCase = ReldatHelper.byteArrayToUpperCharArray(potentialByteUpperCase);
 
         //System.out.println("UPPERCASE: " + String.valueOf(potentialCharUpperCase));
-        System.out.println("replyAckNum: " + replyAckNum);
+        System.out.println("acked back " + replyAckNum);
 
         ReldatPacketTimers.cancelTimer(replyAckNum);
 
@@ -103,8 +105,9 @@ public class ReldatGBNSender {
 
     // Finish everything
     try {
+      // handle starting seqnum at 1
       PrintWriter writer = new PrintWriter(filePath.split("\\.")[0]  + "-received." + filePath.split("\\.")[1], "UTF-8");
-      for (int i = 0; i < srBuffer.length; i++) {
+      for (int i = 1; i < srBuffer.length; i++) {
         writer.append(srBuffer[i]);
       }
       writer.close();

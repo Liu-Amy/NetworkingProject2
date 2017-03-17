@@ -18,7 +18,7 @@ public class ReldatHelper {
         ReldatConstants.DELAY_MAX - ReldatConstants.DELAY_MIN) + 1)
         + ReldatConstants.DELAY_MIN;
       Thread.sleep(randomNum);
-      System.out.println("delayed"+randomNum);
+      System.out.print("delayed ");
     }
     DatagramPacket sendPacket = new DatagramPacket(data, data.length, ip, port);
     socket.send(sendPacket);
@@ -32,10 +32,11 @@ public class ReldatHelper {
         ReldatConstants.DELAY_MAX - ReldatConstants.DELAY_MIN) + 1)
         + ReldatConstants.DELAY_MIN;
       Thread.sleep(randomNum);
-      System.out.println("delayed"+randomNum);
+      System.out.print("delayed " + seqNum + " ");
     }
     byte[] merged = mergeByteArray(createHeader(data, seqNum, ackNum), data);
     DatagramPacket sendPacket = new DatagramPacket(merged, merged.length, ip, port);
+    socket.send(sendPacket);
     socket.send(sendPacket);
   }
 

@@ -79,7 +79,7 @@ public class ReldatFileReceiver {
 
         // set ack number to sequence number from client
         int ackNum = ReldatHelper.byteArrToInt(Arrays.copyOfRange(header, 16, 20));
-        System.out.println(ackNum);
+        System.out.println("acked " + ackNum);
 
         // send byte array to client
         ReldatHelper.sendPacketWithHeader(serverSocket, upperByteArrayData, clientAddress, clientPort, 0, ackNum);

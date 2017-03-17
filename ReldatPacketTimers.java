@@ -19,5 +19,6 @@ public class ReldatPacketTimers {
   public static void cancelTimer(int seqNum) {
     Timer timer = packetTimers.remove(seqNum);
     timer.cancel();
+    System.out.println("canceled timer " + seqNum);
   }
 }
